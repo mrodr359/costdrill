@@ -34,7 +34,7 @@ pip install costdrill
 ### Install from Source
 
 ```bash
-git clone https://github.com/mrodriguez/costdrill.git
+git clone https://github.com/mrodr359/costdrill.git
 cd costdrill
 pip install -e .
 ```
@@ -115,7 +115,7 @@ costdrill/
 
 ```bash
 # Clone the repository
-git clone https://github.com/mrodriguez/costdrill.git
+git clone https://github.com/mrodr359/costdrill.git
 cd costdrill
 
 # Install with development dependencies
@@ -177,8 +177,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-- [GitHub Issues](https://github.com/mrodriguez/costdrill/issues)
-- [Documentation](https://github.com/mrodriguez/costdrill/docs)
+- [GitHub Issues](https://github.com/mrodr359/costdrill/issues)
+- [Documentation](https://github.com/mrodr359/costdrill/docs)
 
 ---
 

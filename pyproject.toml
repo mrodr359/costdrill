@@ -46,9 +46,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mrodriguez/costdrill"
-Repository = "https://github.com/mrodriguez/costdrill"
-"Bug Tracker" = "https://github.com/mrodriguez/costdrill/issues"
+Homepage = "https://github.com/mrodr359/costdrill"
+Repository = "https://github.com/mrodr359/costdrill"
+"Bug Tracker" = "https://github.com/mrodr359/costdrill/issues"
 
 [project.scripts]
 costdrill = "costdrill.cli:main"
