@@ -45,6 +45,24 @@ Features demonstrated:
 - Using the caching layer for performance
 - Cache management
 
+#### ec2_cost_analysis.py
+
+Comprehensive EC2 instance cost analysis with detailed breakdowns:
+
+```bash
+python ec2_cost_analysis.py
+```
+
+Features demonstrated:
+- Single instance analysis with complete metadata
+- Regional analysis of all EC2 instances
+- Cost breakdown by component (compute, storage, data transfer)
+- Top cost instances identification
+- Grouping by instance type and state
+- Filtering by tags
+- Cost optimization opportunity detection
+- Interactive exploration with Rich formatting
+
 ### Example Output
 
 ```
