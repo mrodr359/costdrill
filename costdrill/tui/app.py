@@ -288,13 +288,13 @@ class CostDrillApp(App):
     def on_mount(self) -> None:
         """Handle app mount."""
         # Start AWS connectivity checks
-        self.run_worker(self._check_aws_connectivity, exclusive=True, name="aws_checks")
+        self.run_worker(self._check_aws_connectivity, exclusive=True, name="aws_checks", thread=True)
 
         if self.initial_service:
             self.notify(f"Starting with service: {self.initial_service}")
 
-    async def _check_aws_connectivity(self) -> None:
-        """Worker to check AWS connectivity asynchronously."""
+    def _check_aws_connectivity(self) -> None:
+        """Worker to check AWS connectivity in background thread."""
         checklist = self.query_one("#checklist", DynamicChecklist)
 
         # Check 1: AWS Credentials
