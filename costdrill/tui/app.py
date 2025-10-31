@@ -15,19 +15,19 @@ class HeroBanner(Container):
     def compose(self) -> ComposeResult:
         yield Static(
             """\
-[bold #8be9fd]COSTDRILL[/]
+[#8be9fd][b]COSTDRILL[/b][/]
 [dim]AWS cost visibility without the console fatigue.[/dim]
 
-[bold]Navigate[/bold] services, [bold]drill[/bold] into spend, and surface [bold magenta]savings signals[/bold magenta] in seconds.
+[b]Navigate[/b] services, [b]drill[/b] into spend, and surface [magenta][b]savings signals[/b][/magenta] in seconds.
             """,
             classes="hero-title",
         )
         yield Static(
             """\
-[bold #8be9fd]Launch Checklist[/]
-[green]-[/green] AWS credentials configured
-[green]-[/green] Cost Explorer enabled
-[green]-[/green] Choose a service to begin your journey
+[#8be9fd][b]Launch Checklist[/b][/]
+[green]•[/green] AWS credentials configured
+[green]•[/green] Cost Explorer enabled
+[green]•[/green] Choose a service to begin your journey
             """,
             classes="hero-checklist",
         )
@@ -42,7 +42,7 @@ class AccentPanel(Container):
         self._body = body
 
     def compose(self) -> ComposeResult:
-        yield Static(f"[bold #bd93f9]{self._title}[/]", classes="panel-heading")
+        yield Static(f"[#bd93f9][b]{self._title}[/b][/]", classes="panel-heading")
         yield Static(self._body, classes="panel-body")
 
 
@@ -50,15 +50,15 @@ class ServiceSelector(Container):
     """Widget for selecting AWS services."""
 
     SERVICES = [
-        ("EC2 - Elastic Compute Cloud", "ec2"),
-        ("S3 - Simple Storage Service", "s3"),
-        ("RDS - Relational Database Service", "rds"),
-        ("Lambda - Serverless Functions", "lambda"),
-        ("CloudFront - Global CDN", "cloudfront"),
+        ("EC2 — Elastic Compute Cloud", "ec2"),
+        ("S3 — Simple Storage Service [Coming Soon]", "s3"),
+        ("RDS — Relational Database Service [Coming Soon]", "rds"),
+        ("Lambda — Serverless Functions [Coming Soon]", "lambda"),
+        ("CloudFront — Global CDN [Coming Soon]", "cloudfront"),
     ]
 
     def compose(self) -> ComposeResult:
-        yield Static("[bold #8be9fd]Choose a starting point[/]", classes="selector-heading")
+        yield Static("[#8be9fd][b]Choose a starting point[/b][/]", classes="selector-heading")
         yield Static(
             "Pick a service to explore resource level costs. You can refine to regions and "
             "resource groups after selection.",
@@ -70,7 +70,7 @@ class ServiceSelector(Container):
             id="service-select",
         )
         yield Static(
-            "[dim]Hotkeys: Up/Down navigate | Enter select | q quit[/dim]",
+            "[dim]Hotkeys: ↑↓ navigate • ↵ select • q quit[/dim]",
             classes="selector-hint",
         )
 
@@ -81,17 +81,17 @@ class QuickInsights(Container):
     def compose(self) -> ComposeResult:
         yield AccentPanel(
             "Deep Dives",
-            "[cyan]Break down[/cyan] compute vs storage vs transfer with a glance.",
+            "[cyan]Break down[/] compute vs storage vs transfer with a glance.",
             classes="tile",
         )
         yield AccentPanel(
             "Save Smart",
-            "Surface [magenta]right-sizing[/magenta] opportunities before the bill hits.",
+            "Surface [magenta]right-sizing[/] opportunities before the bill hits.",
             classes="tile",
         )
         yield AccentPanel(
             "Share Wins",
-            "Export [green]JSON[/green], [green]CSV[/green], or [green]Markdown[/green] reports instantly.",
+            "Export [green]JSON[/], [green]CSV[/], or [green]Markdown[/] reports instantly.",
             classes="tile",
         )
 
@@ -239,7 +239,7 @@ class CostDrillApp(App):
                 with Vertical(classes="right-column"):
                     yield QuickInsights()
                     yield Static(
-                        "Need guidance on FinOps maturity? [link=/playbook][bold]Open the playbook[/bold][/link] "
+                        "Need guidance on FinOps maturity? [b]Open the playbook[/b] "
                         "after finishing your first drill-down.",
                         classes="insight-footer",
                     )
@@ -254,9 +254,16 @@ class CostDrillApp(App):
         """Handle service selection."""
         if event.select.id == "service-select":
             service = event.value
-            self.notify(f"Selected service: {service}")
-            # TODO: Navigate to service-specific view
-            # TODO: Fetch and display cost data
+
+            if service == "ec2":
+                # Import here to avoid circular imports
+                from costdrill.tui.ec2_screen import EC2ListScreen
+
+                # Determine region (use initial_region or default)
+                region = self.initial_region or "us-east-1"
+                self.push_screen(EC2ListScreen(region=region))
+            else:
+                self.notify(f"[yellow]{service.upper()} support coming soon![/yellow]")
 
     def action_toggle_dark(self) -> None:
         """Toggle dark mode."""
