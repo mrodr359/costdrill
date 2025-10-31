@@ -120,7 +120,7 @@ class EC2ListScreen(Screen):
 
     def __init__(self, region: str = "us-east-1"):
         super().__init__()
-        self.region = region
+        self.aws_region = region
         self.summary: Optional[RegionalEC2Summary] = None
         self.error_message: Optional[str] = None
 
@@ -130,7 +130,7 @@ class EC2ListScreen(Screen):
 
         # Header with title
         with Container(classes="header-panel"):
-            yield Static(f"[b]EC2 Instances - {self.region}[/b]", classes="header-title")
+            yield Static(f"[b]EC2 Instances - {self.aws_region}[/b]", classes="header-title")
 
         # Loading state (will be hidden once data loads)
         with Container(classes="loading-container", id="loading"):
@@ -195,10 +195,10 @@ class EC2ListScreen(Screen):
         """Worker to fetch instances from AWS."""
         try:
             # Initialize AWS client and aggregator
-            aws_client = AWSClient(region=self.region)
+            aws_client = AWSClient(region=self.aws_region)
             ec2_aggregator = CachedEC2Aggregator(
                 aws_client=aws_client,
-                region=self.region,
+                region=self.aws_region,
                 enable_cache=True,
             )
 
@@ -291,7 +291,7 @@ class EC2ListScreen(Screen):
         if row_index < len(self.summary.instances):
             instance_with_costs = self.summary.instances[row_index]
             # Push detail screen
-            self.app.push_screen(EC2DetailScreen(instance_with_costs, self.region))
+            self.app.push_screen(EC2DetailScreen(instance_with_costs, self.aws_region))
 
     def action_refresh(self) -> None:
         """Refresh the instance list."""
@@ -393,7 +393,7 @@ class EC2DetailScreen(Screen):
     def __init__(self, instance_with_costs: EC2InstanceWithCosts, region: str):
         super().__init__()
         self.instance_with_costs = instance_with_costs
-        self.region = region
+        self.aws_region = region
 
     def compose(self) -> ComposeResult:
         """Compose the detail screen."""
