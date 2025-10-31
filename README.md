@@ -9,13 +9,29 @@ CostDrill is an open-source Command-Line Interface (CLI) tool that provides inte
 
 ## Features
 
-- **Interactive TUI Navigation**: Browse AWS services, select specific resources, and drill down into cost breakdowns
-- **Service Support**: EC2, S3, RDS, and more (starting with EC2 in MVP)
-- **Cost Breakdowns**: View costs by compute, storage, data transfer, and other components
-- **Region Filtering**: Focus on specific regions or view all at once
-- **Export Reports**: Generate JSON, CSV, or Markdown reports
-- **Optimization Recommendations**: Get savings suggestions and what-if simulations
-- **Real-time Updates**: Cached data for quick responses
+### 🎨 Beautiful TUI Interface
+- **Interactive Navigation**: Browse AWS services with an intuitive text-based interface
+- **Real-time Data**: View live cost data with loading indicators and auto-refresh
+- **Dark Theme**: Eye-friendly color scheme optimized for terminal use
+- **Responsive Layout**: Adapts to your terminal size
+
+### 💰 Comprehensive EC2 Cost Analysis
+- **Regional Overview**: See all EC2 instances with total costs, running/stopped counts
+- **Detailed Breakdowns**: 6-category cost analysis (compute, storage, data transfer, snapshots, EIPs, other)
+- **Per-Instance Metrics**: View hourly, daily, and monthly cost projections
+- **Instance Metadata**: Complete instance details (type, state, VPC, IPs, tags, volumes)
+
+### 🔍 Smart Cost Discovery
+- **Sortable Tables**: Click through instances to explore details
+- **Color-Coded States**: Instant visual feedback (green=running, red=stopped)
+- **Tag Support**: Filter and organize by your tagging strategy
+- **Optimization Hints**: Identify idle resources and cost waste
+
+### ⚡ Performance & Reliability
+- **Built-in Caching**: Sub-5-second response times with intelligent caching
+- **Error Handling**: Graceful degradation with retry mechanisms
+- **Async Operations**: Non-blocking UI during data fetches
+- **Credential Validation**: Automatic AWS authentication verification
 
 ## Installation
 
@@ -65,9 +81,26 @@ costdrill
 
 ### 3. Navigate the TUI
 
-- Use arrow keys to navigate
-- Press Enter to select
-- Press 'q' to quit
+The interactive TUI provides a beautiful interface to explore your AWS costs:
+
+1. **Home Screen**: Select from available AWS services (EC2 is fully implemented)
+2. **EC2 List View**: View all instances with costs, regional statistics, and filters
+3. **EC2 Detail View**: Drill down into individual instances for complete breakdowns
+
+**Keyboard Shortcuts:**
+- `↑↓` - Navigate menus and tables
+- `Enter` - Select / View details
+- `r` - Refresh data
+- `q` - Go back / Quit
+- `d` - Toggle dark mode
+
+**What You'll See:**
+- Regional statistics (total instances, running, stopped, total cost)
+- Instance list with cost data (30-day totals and daily averages)
+- Color-coded instance states (🟢 running, 🔴 stopped)
+- Detailed cost breakdowns (compute, storage, data transfer, etc.)
+- Instance metadata (type, launch time, VPC, IPs, tags)
+- EBS volume information
 
 ## Usage Examples
 
@@ -156,12 +189,28 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 
 ## Roadmap
 
-- [x] MVP: Interactive TUI for EC2 cost exploration
-- [ ] Add S3, RDS, and other service support
+### ✅ Completed (v0.1.0)
+- [x] Interactive TUI with beautiful dark theme
+- [x] Complete EC2 cost analysis with drill-down
+- [x] Regional statistics and instance filtering
+- [x] 6-category cost breakdowns
+- [x] Async data loading with caching
+- [x] Comprehensive error handling
+- [x] Instance metadata and tags display
+
+### 🚧 In Progress
+- [ ] Cost optimization recommendations engine
+- [ ] Export functionality (JSON, CSV, Markdown)
+- [ ] Historical cost trend analysis
+- [ ] Tag-based cost allocation
+
+### 📋 Planned Features
+- [ ] S3, RDS, Lambda support
 - [ ] Multi-account support via AWS Organizations
 - [ ] AI-powered cost optimization suggestions
 - [ ] Multi-cloud support (GCP, Azure)
 - [ ] Terraform/IaC integration for automated fixes
+- [ ] Custom cost alerts and notifications
 
 See the [PRD](PRD.md) for detailed feature planning.
 
