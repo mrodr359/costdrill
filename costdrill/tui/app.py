@@ -15,7 +15,7 @@ class HeroBanner(Container):
     def compose(self) -> ComposeResult:
         yield Static(
             """\
-[gradient(#8be9fd,#bd93f9)]COSTDRILL[/gradient]
+[bold #8be9fd]COSTDRILL[/]
 [dim]AWS cost visibility without the console fatigue.[/dim]
 
 [bold]Navigate[/bold] services, [bold]drill[/bold] into spend, and surface [bold magenta]savings signals[/bold magenta] in seconds.
@@ -24,10 +24,10 @@ class HeroBanner(Container):
         )
         yield Static(
             """\
-[bold color=#8be9fd]Launch Checklist[/bold color=#8be9fd]
-[green]•[/green] AWS credentials configured
-[green]•[/green] Cost Explorer enabled
-[green]•[/green] Choose a service to begin your journey
+[bold #8be9fd]Launch Checklist[/]
+[green]-[/green] AWS credentials configured
+[green]-[/green] Cost Explorer enabled
+[green]-[/green] Choose a service to begin your journey
             """,
             classes="hero-checklist",
         )
@@ -42,7 +42,7 @@ class AccentPanel(Container):
         self._body = body
 
     def compose(self) -> ComposeResult:
-        yield Static(f"[bold color=#bd93f9]{self._title}[/bold color=#bd93f9]", classes="panel-heading")
+        yield Static(f"[bold #bd93f9]{self._title}[/]", classes="panel-heading")
         yield Static(self._body, classes="panel-body")
 
 
@@ -50,15 +50,15 @@ class ServiceSelector(Container):
     """Widget for selecting AWS services."""
 
     SERVICES = [
-        ("EC2 — Elastic Compute Cloud", "ec2"),
-        ("S3 — Simple Storage Service", "s3"),
-        ("RDS — Relational Database Service", "rds"),
-        ("Lambda — Serverless Functions", "lambda"),
-        ("CloudFront — Global CDN", "cloudfront"),
+        ("EC2 - Elastic Compute Cloud", "ec2"),
+        ("S3 - Simple Storage Service", "s3"),
+        ("RDS - Relational Database Service", "rds"),
+        ("Lambda - Serverless Functions", "lambda"),
+        ("CloudFront - Global CDN", "cloudfront"),
     ]
 
     def compose(self) -> ComposeResult:
-        yield Static("[bold color=#8be9fd]Choose a starting point[/bold color=#8be9fd]", classes="selector-heading")
+        yield Static("[bold #8be9fd]Choose a starting point[/]", classes="selector-heading")
         yield Static(
             "Pick a service to explore resource level costs. You can refine to regions and "
             "resource groups after selection.",
@@ -70,7 +70,7 @@ class ServiceSelector(Container):
             id="service-select",
         )
         yield Static(
-            "[dim]Hotkeys: ↑↓ navigate • ↵ select • q quit[/dim]",
+            "[dim]Hotkeys: Up/Down navigate | Enter select | q quit[/dim]",
             classes="selector-hint",
         )
 
@@ -100,25 +100,14 @@ class CostDrillApp(App):
     """Main CostDrill TUI application."""
 
     CSS = """
-    :root {
-        --color-background-top: #11121f;
-        --color-background-bottom: #1b1e2d;
-        --color-panel: #23243a;
-        --color-panel-border: #44475a;
-        --color-accent: #bd93f9;
-        --color-accent-strong: #ff79c6;
-        --color-muted: #7f85a3;
-        --color-text: #f8f9fd;
-    }
-
     Screen {
-        background: linear-gradient(140deg, var(--color-background-top), var(--color-background-bottom));
-        color: var(--color-text);
+        background: #11121f;
+        color: #f8f9fd;
     }
 
     Header, Footer {
-        background: linear-gradient(90deg, #2d2143, #1f2a50);
-        color: var(--color-text);
+        background: #1f2a50;
+        color: #f8f9fd;
         border: none;
     }
 
@@ -126,38 +115,36 @@ class CostDrillApp(App):
         padding: 2 3;
         height: 100%;
         width: 100%;
+        background: #11121f;
     }
 
     HeroBanner {
         padding: 2 3;
-        border: solid 1px color(var(--color-panel-border) 60%);
-        background: color(var(--color-panel) 90%);
-        border-left: solid 3px var(--color-accent);
+        background: #23243a;
+        border: solid #44475a;
+        border-left: tall #bd93f9;
         margin-bottom: 1;
-        box-shadow: 0 1 4 0 rgba(0, 0, 0, 0.35);
+        layout: vertical;
     }
 
     .hero-title {
         text-style: bold;
-        line-height: 1.4;
     }
 
     .hero-checklist {
         margin-top: 1;
-        color: var(--color-muted);
+        color: #7f85a3;
     }
 
     .content {
         height: 1fr;
-        gap: 2;
     }
 
     .left-column, .right-column {
-        background: color(var(--color-panel) 95%);
-        border: solid 1px color(var(--color-panel-border) 70%);
-        border-radius: 1;
+        background: #1b1d2e;
+        border: solid #3c3f58;
         padding: 2 3;
-        box-shadow: 0 2 6 0 rgba(0, 0, 0, 0.25);
+        layout: vertical;
     }
 
     .left-column {
@@ -169,63 +156,59 @@ class CostDrillApp(App):
     }
 
     .selector-heading {
-        color: var(--color-accent);
+        color: #8be9fd;
         text-style: bold;
     }
 
     .selector-blurb {
         margin-top: 1;
-        color: var(--color-muted);
+        color: #7f85a3;
     }
 
     #service-select {
         margin-top: 1;
         height: 3;
-        border: solid 1px color(var(--color-panel-border) 70%);
+        border: solid #3c3f58;
         background: #1b1d2e;
-        color: var(--color-text);
-        selection-background: var(--color-accent-strong);
-        selection-color: #111;
+        color: #f8f9fd;
     }
 
     .selector-hint {
         margin-top: 1;
-        color: color(var(--color-muted) 70%);
+        color: #646b8a;
     }
 
     QuickInsights {
         layout: horizontal;
-        gap: 1;
     }
 
     AccentPanel {
         layout: vertical;
-        gap: 1;
     }
 
     .tile {
         width: 1fr;
         height: auto;
-        background: #1a1c2d;
-        border: solid 1px color(var(--color-panel-border) 60%);
-        border-top: solid 2px var(--color-accent-strong);
+        background: #171829;
+        border: solid #34364f;
+        border-top: solid #ff79c6;
         padding: 1 2;
-        color: color(var(--color-text) 90%);
+        color: #dde3ff;
     }
 
     .accent-panel .panel-heading {
-        color: var(--color-accent);
+        color: #bd93f9;
         text-style: bold;
         margin-bottom: 1;
     }
 
     .accent-panel .panel-body {
-        color: color(var(--color-text) 85%);
+        color: #f0f3ff;
     }
 
     .insight-footer {
         margin-top: 2;
-        color: color(var(--color-muted) 70%);
+        color: #646b8a;
     }
     """
 
@@ -256,7 +239,7 @@ class CostDrillApp(App):
                 with Vertical(classes="right-column"):
                     yield QuickInsights()
                     yield Static(
-                        "Need guidance on FinOps maturity? [bold link=#]Open the playbook[/bold] "
+                        "Need guidance on FinOps maturity? [link=/playbook][bold]Open the playbook[/bold][/link] "
                         "after finishing your first drill-down.",
                         classes="insight-footer",
                     )
