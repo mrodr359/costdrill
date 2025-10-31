@@ -6,7 +6,42 @@ from typing import Optional
 
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal, Vertical
-from textual.widgets import Footer, Header, Static, Select
+from textual.widgets import Footer, Header, Static, Select, LoadingIndicator
+
+from costdrill.core.aws_client import AWSClient
+from costdrill.core.cost_explorer import CostExplorer
+from costdrill.core.exceptions import (
+    AWSAuthenticationError,
+    AWSCredentialsNotFoundError,
+    CostExplorerNotEnabledException,
+)
+
+
+class DynamicChecklist(Container):
+    """Dynamic checklist that validates AWS connectivity."""
+
+    def compose(self) -> ComposeResult:
+        yield Static("[#8be9fd][b]Launch Checklist[/b][/]", classes="checklist-title")
+        yield Static("[yellow]⟳[/yellow] Checking AWS credentials...", id="check-credentials", classes="check-item")
+        yield Static("[dim]⟳[/dim] Checking AWS connectivity...", id="check-connectivity", classes="check-item")
+        yield Static("[dim]⟳[/dim] Checking Cost Explorer...", id="check-cost-explorer", classes="check-item")
+
+    def update_check(self, check_id: str, status: str, message: str) -> None:
+        """Update a checklist item.
+
+        Args:
+            check_id: ID of the check item (e.g., "check-credentials")
+            status: "checking", "success", "error", "warning"
+            message: The message to display
+        """
+        icons = {
+            "checking": "[yellow]⟳[/yellow]",
+            "success": "[green]✓[/green]",
+            "error": "[red]✗[/red]",
+            "warning": "[yellow]⚠[/yellow]",
+        }
+        icon = icons.get(status, "[dim]•[/dim]")
+        self.query_one(f"#{check_id}", Static).update(f"{icon} {message}")
 
 
 class HeroBanner(Container):
@@ -21,15 +56,6 @@ class HeroBanner(Container):
 [b]Navigate[/b] services, [b]drill[/b] into spend, and surface [magenta][b]savings signals[/b][/magenta] in seconds.
             """,
             classes="hero-title",
-        )
-        yield Static(
-            """\
-[#8be9fd][b]Launch Checklist[/b][/]
-[green]•[/green] AWS credentials configured
-[green]•[/green] Cost Explorer enabled
-[green]•[/green] Choose a service to begin your journey
-            """,
-            classes="hero-checklist",
         )
 
 
@@ -131,9 +157,20 @@ class CostDrillApp(App):
         text-style: bold;
     }
 
-    .hero-checklist {
+    DynamicChecklist {
         margin-top: 1;
-        color: #7f85a3;
+        layout: vertical;
+    }
+
+    .checklist-title {
+        color: #8be9fd;
+        text-style: bold;
+        margin-bottom: 1;
+    }
+
+    .check-item {
+        margin: 0 0 0 1;
+        color: #f8f9fd;
     }
 
     .content {
@@ -227,12 +264,15 @@ class CostDrillApp(App):
         self.initial_region = initial_region
         self.title = "CostDrill • AWS Cost Explorer"
         self.sub_title = "Interactive cloud cost analysis"
+        self.aws_ready = False
+        self.aws_client: Optional[AWSClient] = None
 
     def compose(self) -> ComposeResult:
         """Create child widgets for the app."""
         yield Header()
         with Container(classes="main-layout"):
             yield HeroBanner()
+            yield DynamicChecklist(id="checklist")
             with Horizontal(classes="content"):
                 with Vertical(classes="left-column"):
                     yield ServiceSelector()
@@ -247,8 +287,218 @@ class CostDrillApp(App):
 
     def on_mount(self) -> None:
         """Handle app mount."""
+        # Start AWS connectivity checks
+        self.run_worker(self._check_aws_connectivity, exclusive=True, name="aws_checks")
+
         if self.initial_service:
             self.notify(f"Starting with service: {self.initial_service}")
+
+    async def _check_aws_connectivity(self) -> None:
+        """Worker to check AWS connectivity asynchronously."""
+        checklist = self.query_one("#checklist", DynamicChecklist)
+
+        # Check 1: AWS Credentials
+        try:
+            self.call_from_thread(
+                checklist.update_check,
+                "check-credentials",
+                "checking",
+                "Checking AWS credentials..."
+            )
+
+            # Try to create AWS client
+            region = self.initial_region or "us-east-1"
+            self.aws_client = AWSClient(region=region)
+
+            # If we get here, credentials are configured
+            self.call_from_thread(
+                checklist.update_check,
+                "check-credentials",
+                "success",
+                "AWS credentials configured"
+            )
+
+        except AWSCredentialsNotFoundError:
+            self.call_from_thread(
+                checklist.update_check,
+                "check-credentials",
+                "error",
+                "AWS credentials not found. Run 'aws configure'"
+            )
+            self.call_from_thread(
+                checklist.update_check,
+                "check-connectivity",
+                "error",
+                "Skipped (no credentials)"
+            )
+            self.call_from_thread(
+                checklist.update_check,
+                "check-cost-explorer",
+                "error",
+                "Skipped (no credentials)"
+            )
+            return
+
+        except AWSAuthenticationError as e:
+            self.call_from_thread(
+                checklist.update_check,
+                "check-credentials",
+                "error",
+                f"Authentication failed: {str(e)[:40]}..."
+            )
+            self.call_from_thread(
+                checklist.update_check,
+                "check-connectivity",
+                "error",
+                "Skipped (auth failed)"
+            )
+            self.call_from_thread(
+                checklist.update_check,
+                "check-cost-explorer",
+                "error",
+                "Skipped (auth failed)"
+            )
+            return
+
+        except Exception as e:
+            self.call_from_thread(
+                checklist.update_check,
+                "check-credentials",
+                "error",
+                f"Error: {str(e)[:40]}..."
+            )
+            self.call_from_thread(
+                checklist.update_check,
+                "check-connectivity",
+                "error",
+                "Skipped (error)"
+            )
+            self.call_from_thread(
+                checklist.update_check,
+                "check-cost-explorer",
+                "error",
+                "Skipped (error)"
+            )
+            return
+
+        # Check 2: AWS Connectivity
+        try:
+            self.call_from_thread(
+                checklist.update_check,
+                "check-connectivity",
+                "checking",
+                "Checking AWS connectivity..."
+            )
+
+            # Credentials were already validated in AWSClient init
+            if self.aws_client and self.aws_client.credentials:
+                account_id = self.aws_client.credentials.account_id
+                self.call_from_thread(
+                    checklist.update_check,
+                    "check-connectivity",
+                    "success",
+                    f"Connected to AWS (Account: {account_id})"
+                )
+            else:
+                self.call_from_thread(
+                    checklist.update_check,
+                    "check-connectivity",
+                    "error",
+                    "Failed to connect to AWS"
+                )
+                self.call_from_thread(
+                    checklist.update_check,
+                    "check-cost-explorer",
+                    "error",
+                    "Skipped (no connection)"
+                )
+                return
+
+        except Exception as e:
+            self.call_from_thread(
+                checklist.update_check,
+                "check-connectivity",
+                "error",
+                f"Connection error: {str(e)[:40]}..."
+            )
+            self.call_from_thread(
+                checklist.update_check,
+                "check-cost-explorer",
+                "error",
+                "Skipped (no connection)"
+            )
+            return
+
+        # Check 3: Cost Explorer
+        try:
+            self.call_from_thread(
+                checklist.update_check,
+                "check-cost-explorer",
+                "checking",
+                "Checking Cost Explorer..."
+            )
+
+            # Try to make a simple Cost Explorer API call
+            cost_explorer = CostExplorer(self.aws_client)
+            from datetime import datetime, timedelta
+
+            # Try to get cost data for the last day
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=1)
+
+            # This will raise CostExplorerNotEnabledException if not enabled
+            _ = cost_explorer.get_cost_and_usage(
+                start_date=start_date,
+                end_date=end_date,
+                granularity="DAILY"
+            )
+
+            self.call_from_thread(
+                checklist.update_check,
+                "check-cost-explorer",
+                "success",
+                "Cost Explorer enabled and accessible"
+            )
+
+            # Mark as ready
+            self.aws_ready = True
+            self.call_from_thread(
+                self.notify,
+                "[green]✓[/green] All checks passed! Ready to explore costs."
+            )
+
+        except CostExplorerNotEnabledException:
+            self.call_from_thread(
+                checklist.update_check,
+                "check-cost-explorer",
+                "warning",
+                "Cost Explorer not enabled. Enable in AWS Billing Console"
+            )
+            self.call_from_thread(
+                self.notify,
+                "[yellow]⚠[/yellow] Cost Explorer not enabled. Some features limited."
+            )
+
+        except Exception as e:
+            error_msg = str(e)
+            if "AccessDeniedException" in error_msg:
+                self.call_from_thread(
+                    checklist.update_check,
+                    "check-cost-explorer",
+                    "error",
+                    "Access denied. Check IAM permissions for Cost Explorer"
+                )
+            else:
+                self.call_from_thread(
+                    checklist.update_check,
+                    "check-cost-explorer",
+                    "error",
+                    f"Error: {error_msg[:40]}..."
+                )
+            self.call_from_thread(
+                self.notify,
+                "[yellow]⚠[/yellow] Cost Explorer check failed. Some features may not work."
+            )
 
     def on_select_changed(self, event: Select.Changed) -> None:
         """Handle service selection."""
